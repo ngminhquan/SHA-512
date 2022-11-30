@@ -241,24 +241,24 @@ def SHA_512(s):
     M = div(M)
     w = create(M)                   #ánh xạ khối 1024bit thành 80 khối 64bit
     print(w)
-    H = [['6A09E667F3BCC908'],
-         ['BB67AE8584CAA73B'],
-         ['3C6EF372FE94F82B'],
-         ['A54FF53A5F1D36F1'],
-         ['510E527FADE682D1'],
-         ['9B05688C2B3E6C1F'],
-         ['1F83D9ABFB41BD6B'],
-         ['5BE0CD19137E2179']]
+    H = ['6A09E667F3BCC908',
+         'BB67AE8584CAA73B',
+         '3C6EF372FE94F82B',
+         'A54FF53A5F1D36F1',
+         '510E527FADE682D1',
+         '9B05688C2B3E6C1F',
+         '1F83D9ABFB41BD6B',
+         '5BE0CD19137E2179']
     for i in range(0, len(M)):
         #khởi tạo các biến làm việc
-        a = H[0][i]
-        b = H[1][i]
-        c = H[2][i]
-        d = H[3][i]
-        e = H[4][i]
-        f = H[5][i]
-        g = H[6][i]
-        h = H[7][i]
+        a = H[0]
+        b = H[1]
+        c = H[2]
+        d = H[3]
+        e = H[4]
+        f = H[5]
+        g = H[6]
+        h = H[7]
         #thực hiện tính toán băm chính
         for t in range(0, 80):
             print(t)
@@ -282,7 +282,9 @@ def SHA_512(s):
         A.append(f)
         A.append(g)
         A.append(h)
-        #for j in range(0, 8):
-        #    H[j][i+1].append(xor_hex(H[j][i], A[j]))
+        L = []
+        for j in range(0, 8):
+            L.append(xor_hex(H[j], A[j]))
+        H = L
     return A
-print(SHA_512('abc'))
+print(SHA_512(''))
