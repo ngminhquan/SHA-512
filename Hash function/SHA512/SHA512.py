@@ -89,8 +89,8 @@ def div(s):
     n = []
     for i in range(len(s)):
         m = []
-        for j in range(0, 256, 16):       
-            m.append(s[i][j:j+16])
+        for j in range(0, 256, 16):       #mỗi khối 1024bit(256 số hexa) được chia thành
+            m.append(s[i][j:j+16])          #16 khối 16 bit
         n.append(m)
     return n
 
@@ -102,12 +102,12 @@ def rightshift(s, n):
     else:
         for i in range(0, n):               #thực hiện n lần dịch phải 1 bit
             k = ''
-            k += s[-1]              #dịch bit cuối cùng lên đầu tiên
-            k += s[:len(s) - 1]
+            k += s[-1]                      #dịch bit cuối cùng lên đầu tiên
+            k += s[:len(s) - 1]             #thêm các bit còn lại
             s = k
         return bin_to_hex(s)
 
-#Dịch vòng trái n bit
+#Dịch trái n bit, bên phải thêm bit '0'
 def leftshift(s, n):  
     s = hex_to_bin(s)
     if n == 0:
@@ -134,13 +134,13 @@ def xor_hex(a, b):
 
 #phép and
 def and2(a, b):
-    a = hex_to_bin(a)
+    a = hex_to_bin(a)               #chuyển a, b về dạng nhị phân
     b = hex_to_bin(b)
     c = ''
     for i in range(len(a)):
-        if a[i] == '1' and b[i] == '1':
-            c += '1'
-        else: c += '0'
+        if a[i] == '1' and b[i] == '1': 
+            c += '1'                #thực hiện phép and: trả về 1 nếu cả hai là bit '1'
+        else: c += '0'              # còn lại trả về 0
     c = bin_to_hex(c)
     return c
 
@@ -149,7 +149,7 @@ def not1(s):
     s = hex_to_bin(s)
     c = ''
     for i in range(len(s)):
-        if s[i] == '0':
+        if s[i] == '0':             #đảo ngược giá trị bit: '1' chuyển thành '0'; '0' thành '1'
             c +='1'
         else: c+= '0'
     c = bin_to_hex(c)
@@ -157,7 +157,7 @@ def not1(s):
 
 #
 def sum0(s):
-    ROTR28 = rightshift(s, 28)
+    ROTR28 = rightshift(s, 28)      
     ROTR34 = rightshift(s, 34)
     ROTR39 = rightshift(s, 39)
     val = xor_hex(ROTR28, xor_hex(ROTR34, ROTR39))
@@ -177,7 +177,7 @@ def s0(s):
     val = xor_hex(ROTR1, xor_hex(ROTR8, SHR7))
     return val
 
-#print(s0('1234'))
+
 def s1(s):
     ROTR19 = rightshift(s, 19)
     ROTR61 = rightshift(s, 61)
@@ -265,8 +265,8 @@ def SHA_512(s):
             T1 = xor_hex(h, xor_hex(Ch(e, f, g), xor_hex(sum1(e), xor_hex(w[t], K[t].upper()))))
             T2 = xor_hex(sum0(a), Maj(a, b, c))
             h = g
-            g = f
-            f = e
+            g = f                           #Tính toán các giá trị mới của thanh ghi
+            f = e                           #qua từng vòng lặp
             e = xor_hex(d, T1)
             d = c
             c = b
