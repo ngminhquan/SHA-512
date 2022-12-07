@@ -1,6 +1,7 @@
-﻿#ASCII to hex
-from operator import xor
+﻿import numpy as np
+import math
 
+#ASCII to hex
 
 def text_to_hex(s):
     d = ''
@@ -14,6 +15,7 @@ def text_to_hex(s):
             c[i] = '0' + c[i]           #có 1 kí tự
     for i in c:
         d += i
+    d = d.upper()
     return d
 
 #CHuyển số hexa về số nhị phân
@@ -69,17 +71,32 @@ def bin_to_hex(s):
         hexa = hexa + trans[ch]
     return hexa
 
+#Chuyển thập phân sang nhị phân
+def dec_to_bin(s):
+    res = bin(s).replace("0b", "") # loai bo 0b cua ham bin
+    if(len(res) % 4 != 0):
+        div = len(res) / 4
+        div = int(div)
+        counter = (4 * (div + 1)) - len(res)
+        for i in range(0, counter):
+            res = '0' + res
+    return res
+
 #chia khối
 def divide(s):
     c = []
-    length = hex(len(s) * 4)            #lưu giá trị độ dài của message
+    length = hex(len(s) * 4)            #lưu giá trị độ dài của message (theo bit)
     length  = length.replace('0x', '')  #dưới dạng chuỗi hexa
-    s += '8'                            
+    s += '8'
     while 1:                            #padding thêm bit vào message
-        s += '0'                        #bit đầu là '1', các bit sau là '0'
-        if len(s) + len(length) == 256:
+        if len(s) % 256 == 224:         #bit đầu là '1', các bit sau là '0'
+            break
+        s += '0'
+    while 1:                              
+        if (len(s) + len(length)) % 256 == 0:
             s += length                 #lưu giá trị độ dài vào cuối dãy
-            break;
+            break
+        s += '0'
     for i in range(0, len(s), 256):     #chia thành các khối 1024bit (256 số hexa)
         c.append(s[i:i + 256])
     return c
@@ -93,6 +110,7 @@ def div(s):
             m.append(s[i][j:j+16])          #16 khối 16 bit
         n.append(m)
     return n
+
 
 #hàm dịch vòng phải n bit
 def rightshift(s, n):
@@ -115,12 +133,12 @@ def leftshift(s, n):
     else:
         for i in range(0, n):             #dich trai 1 bits, thuc hien n lan
             k = ''
-            k += s[1:]      #lay tu bit[1] den het + bit[0]
+                  #lay tu bit[1] den het + bit '0'
             k += '0'
+            k += s[:len(s) - 1]
             s = k
         return bin_to_hex(s)
-
-#phép xor 2 số hexa:
+#phép xor 2 số hexa: 
 def xor_hex(a, b):          
     a = hex_to_bin(a)       #chuyển về dạng nhị phân
     b = hex_to_bin(b)
@@ -131,6 +149,21 @@ def xor_hex(a, b):
         else: c += '1'
     c = bin_to_hex(c)       #chuyển lại về dạng hexa
     return c
+
+#phép cộng modulo 2^64
+def add(a, b):
+    val = int(a, 16) + int(b, 16)
+    while val > int(math.pow(2, 64)):
+        val = val - int(math.pow(2, 64))        #đưa về giá trị trong modulo 2^64
+    val = hex(val).replace('0x', '') 
+    s = ''
+    while 1:
+        if len(s) + len(val) == 16:
+            s += val
+            break                               #padding các bit '0' để số đầu ra
+        s += '0'                                #tương ứng là 64bit (16 số hexa)
+    s = s.upper()
+    return s
 
 #phép and
 def and2(a, b):
@@ -156,30 +189,30 @@ def not1(s):
     return c
 
 #
-def sum0(s):
-    ROTR28 = rightshift(s, 28)      
-    ROTR34 = rightshift(s, 34)
+def sum0(s):                        #hàm tính sum0_512:
+    ROTR28 = rightshift(s, 28)      # ROTR28 ^ ROTR34 ^ ROTR39
+    ROTR34 = rightshift(s, 34)  
     ROTR39 = rightshift(s, 39)
     val = xor_hex(ROTR28, xor_hex(ROTR34, ROTR39))
     return val
 
-def sum1(s):
-    ROTR14 = rightshift(s, 14)
+def sum1(s):                        #hàm tính sum1_512:
+    ROTR14 = rightshift(s, 14)      #  ROTR14 ^ ROTR18 ^ ROTR41
     ROTR18 = rightshift(s, 18)
     ROTR41 = rightshift(s, 41)
     val = xor_hex(ROTR14, xor_hex(ROTR18, ROTR41))
     return val
 
-def s0(s):
-    ROTR1 = rightshift(s, 1)
+def s0(s):                          #hàm tính sigma0_512:
+    ROTR1 = rightshift(s, 1)        #ROTR1 ^ ROTR8 ^ SHR7
     ROTR8 = rightshift(s, 8)
     SHR7 = leftshift(s, 7)
     val = xor_hex(ROTR1, xor_hex(ROTR8, SHR7))
     return val
 
 
-def s1(s):
-    ROTR19 = rightshift(s, 19)
+def s1(s):                          #hàm tính sigma1_512:
+    ROTR19 = rightshift(s, 19)      #ROTR19 ^ ROTR61 ^ SHR6
     ROTR61 = rightshift(s, 61)
     SHR6 = leftshift(s, 6)
     val = xor_hex(ROTR19, xor_hex(ROTR61, SHR6))
@@ -187,17 +220,19 @@ def s1(s):
 
 def Maj(a, b, c):
     x = and2(a, b)
-    y = and2(a, c)
+    y = and2(a, c)                  # (a & b) ^ (a&c) ^ (b&c)
     z = and2(b, c)
     val = xor_hex(x, xor_hex(y, z))
     return val
 
-
+    
 def Ch(e, f, g):
-    x = and2(e, f)
+    x = and2(e, f)                  #(e & f) ^ ((~e) & g)
     y = and2(not1(e), g)
     val = xor_hex(x, y)
     return val
+
+#print(Ch('1234567812345678', 'ABCD12345678ABCD', 'ABCD123456781234'))
 
 K = ['428a2f98d728ae22', '7137449123ef65cd', 'b5c0fbcfec4d3b2f', 'e9b5dba58189dbbc',
      '3956c25bf348b538', '59f111f1b605d019', '923f82a4af194f9b', 'ab1c5ed5da6d8118',
@@ -222,25 +257,31 @@ K = ['428a2f98d728ae22', '7137449123ef65cd', 'b5c0fbcfec4d3b2f', 'e9b5dba58189db
 
 #tạo bộ message Wt
 def create(s):
-    for i in range(len(s)):
-        w = []
+    
+    w = []
+    for i in range(0, len(s)):  
+        m = []
         for t in range(0, 16):      #trong 16 bước đầu, giá trị của w bằng
-            w.append(s[i][t])       #giá trị các khối tương ứng trong message
-        for t in range(16, 80):
-            w.append(xor_hex(s1(w[t-2]), xor_hex(w[t-7], xor_hex(s0(w[t-15]), w[t-16]))))
+            m.append(s[i][t])       #giá trị các khối tương ứng trong message
+        for t in range(16, 80):  
+            m.append(add(s1(m[t-2]), add(m[t-7], add(s0(m[t-15]), m[t-16]))))
                     #64 bước còn lại: tính qua công thức
                     #s1(w[t-2]) + w[t-7] + s0(t-15) + w[t-16]
                     #phép cộng trong trường GF(2^64)
+        w.append(m)
     return w
+p = 'abc'
+l = 'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu'
+r = divide(text_to_hex(l))
 
+r = div(r)
+#print('     cr', create(r))
 
 def SHA_512(s):
     s = text_to_hex(s)              #chuyển s từ kí tự ASCII về hexa
-    M = divide(s)                   #chia M thành các khối 1024bit, padding bit
-                                    #lưu giá trị độ dài message vào cuối
+    M = divide(s)                   #chia M thành các khối 1024bit, padding bit                              #lưu giá trị độ dài message vào cuối
     M = div(M)
     w = create(M)                   #ánh xạ khối 1024bit thành 80 khối 64bit
-    print(w)
     H = ['6A09E667F3BCC908',
          'BB67AE8584CAA73B',
          '3C6EF372FE94F82B',
@@ -260,31 +301,32 @@ def SHA_512(s):
         g = H[6]
         h = H[7]
         #thực hiện tính toán băm chính
-        for t in range(0, 80):
-            print(t)
-            T1 = xor_hex(h, xor_hex(Ch(e, f, g), xor_hex(sum1(e), xor_hex(w[t], K[t].upper()))))
-            T2 = xor_hex(sum0(a), Maj(a, b, c))
+        for t in range(0, len(K)):
+            T1 = add(h, add(Ch(e, f, g), add(sum1(e), add(w[i][t], K[t].upper()))))
+            T2 = add(sum0(a), Maj(a, b, c))
             h = g
             g = f                           #Tính toán các giá trị mới của thanh ghi
             f = e                           #qua từng vòng lặp
-            e = xor_hex(d, T1)
+            e = add(d, T1)
             d = c
             c = b
             b = a
-            a = xor_hex(T1, T2)
-            print(a, b, c, d, e, f, g, h)
-        A = []
-        A.append(a)
-        A.append(b)
-        A.append(c)
-        A.append(d)
-        A.append(e)
-        A.append(f)
-        A.append(g)
-        A.append(h)
-        L = []
-        for j in range(0, 8):
-            L.append(xor_hex(H[j], A[j]))
-        H = L
-    return A
-print(SHA_512(''))
+            a = add(T1, T2)
+        H[0] = add(H[0],a)
+        H[1] = add(H[1],b)                  #H[i] = H[i-1] + a,b,c...
+        H[2] = add(H[2],c)
+        H[3] = add(H[3],d)
+        H[4] = add(H[4],e)
+        H[5] = add(H[5],f)
+        H[6] = add(H[6],g)
+        H[7] = add(H[7],h)
+    digest = ''
+    for i in range(len(H)):
+        digest = digest + H[i] +' '
+    return digest
+
+with open('input.txt', 'r', encoding = 'UTF-8') as text,open('output.txt', 'w', encoding = 'UTF-8') as md:
+    message = text.read()
+    digest = SHA_512(message)
+    md.write(digest)
+    #print(digest)
