@@ -87,6 +87,7 @@ def divide(s):
     c = []
     length = hex(len(s) * 4)            #lưu giá trị độ dài của message (theo bit)
     length  = length.replace('0x', '')  #dưới dạng chuỗi hexa
+    length = length.upper()
     s += '8'
     while 1:                            #padding thêm bit vào message
         if len(s) % 256 == 224:         #bit đầu là '1', các bit sau là '0'
