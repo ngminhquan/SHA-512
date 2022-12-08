@@ -1,5 +1,4 @@
-﻿import numpy as np
-import math
+﻿import math
 
 #ASCII to hex
 
@@ -233,7 +232,6 @@ def Ch(e, f, g):
     val = xor_hex(x, y)
     return val
 
-#print(Ch('1234567812345678', 'ABCD12345678ABCD', 'ABCD123456781234'))
 
 K = ['428a2f98d728ae22', '7137449123ef65cd', 'b5c0fbcfec4d3b2f', 'e9b5dba58189dbbc',
      '3956c25bf348b538', '59f111f1b605d019', '923f82a4af194f9b', 'ab1c5ed5da6d8118',
@@ -271,12 +269,7 @@ def create(s):
                     #phép cộng trong trường GF(2^64)
         w.append(m)
     return w
-p = 'abc'
-l = 'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu'
-r = divide(text_to_hex(l))
 
-r = div(r)
-#print('     cr', create(r))
 
 def SHA_512(s):
     s = text_to_hex(s)              #chuyển s từ kí tự ASCII về hexa
